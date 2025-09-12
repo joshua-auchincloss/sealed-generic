@@ -1,0 +1,20 @@
+[package]
+name = "sealed-generic"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Joshua Auchincloss <joshua.auchincloss@proton.me>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+convert_case = "0.8"
+darling = "0.21"
+proc-macro2 = "1"
+quote = "1"
+syn = "2"
+
+[dev-dependencies]
+serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*" }
