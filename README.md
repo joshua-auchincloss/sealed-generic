@@ -74,3 +74,5 @@ fn main() {
 ## Constraints
 
 - You may only use one generic field
+- No lifetimes (yet)
+- Cannot combine generic fields with slice literals

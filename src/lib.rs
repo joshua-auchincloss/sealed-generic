@@ -2,7 +2,7 @@ use convert_case::{Case, Casing};
 use darling::*;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Ident, Meta, parse_macro_input};
+use syn::{Ident, Meta, TypePath, parse_macro_input};
 
 #[derive(Debug, FromField)]
 #[darling(attributes(define))]
@@ -89,6 +89,7 @@ impl Input {
 enum TypeOrGeneric {
     Type(proc_macro2::TokenStream),
     Generic(Ident),
+    GenericWithNested { field: Ident, path: TypePath },
 }
 
 impl ToTokens for Input {
@@ -96,39 +97,55 @@ impl ToTokens for Input {
         let ident = self.ident.clone();
 
         let vis = self.vis.clone();
-        let mut tys = vec![];
-        for param in &self.generics.params {
-            match param {
-                syn::GenericParam::Const(..) => {}
-                syn::GenericParam::Lifetime(..) => {}
-                syn::GenericParam::Type(ty) => tys.push(ty.ident.clone()),
-            }
+
+        let generic: Ident;
+        if self.generics.params.len() > 1 {
+            panic!("only one generic type may be specified")
+        }
+
+        match self.generics.params.get(0).unwrap() {
+            syn::GenericParam::Const(..) => panic!("const generics not allowed"),
+            syn::GenericParam::Lifetime(..) => todo!("handle lifetimes"),
+            syn::GenericParam::Type(ty) => generic = ty.ident.clone(),
         }
 
         let mut fields = vec![];
         let mut fields_eq = vec![];
 
-        for f in self.data.as_ref().take_struct().unwrap() {
-            let field = f.ident.clone().unwrap();
+        for f in self.data.as_ref().take_struct().expect("struct") {
+            let field = f.ident.clone().expect("ident");
             let ty = f.ty.clone();
-            let ident = Ident::from_string(
-                &quote!(
-                    #ty
-                )
-                .to_string(),
-            )
-            .unwrap();
 
             fields_eq.push(quote!(
                 #field: value.#field,
             ));
-            if tys.contains(&ident) {
-                fields.push(TypeOrGeneric::Generic(field))
-                // is generic
-            } else {
-                fields.push(TypeOrGeneric::Type(quote!(
-                    #field: #ty,
-                )))
+
+            match &ty {
+                syn::Type::Path(path) => {
+                    let segment = path.path.segments.first().expect("path segment");
+                    let ident = segment.ident.clone();
+
+                    if generic == ident {
+                        fields.push(TypeOrGeneric::Generic(field))
+                    } else if !segment.arguments.is_empty() {
+                        fields.push(TypeOrGeneric::GenericWithNested {
+                            field,
+                            path: path.clone(),
+                        })
+                    } else {
+                        fields.push(TypeOrGeneric::Type(quote!(
+                            #field: #ty,
+                        )))
+                    }
+
+                    // if tys.contains(&ident) {
+                    //     fields.push(TypeOrGeneric::Generic(field))
+                    //     // is generic
+                    // } else {
+
+                    // }
+                }
+                _ => panic!("unknown type"),
             }
         }
 
@@ -136,7 +153,7 @@ impl ToTokens for Input {
 
         let seal_mod =
             Ident::from_string(&("Sealed".to_string() + &ident.to_string()).to_case(Case::Pascal))
-                .unwrap();
+                .expect("sealed trait ident to parse");
 
         if self.sealed {
             tokens.extend(quote!(
@@ -154,7 +171,7 @@ impl ToTokens for Input {
                 )
                 .to_case(Case::Pascal),
             )
-            .unwrap();
+            .expect("type ident to parse");
 
             let new_fields: proc_macro2::TokenStream = fields
                 .iter()
@@ -163,6 +180,16 @@ impl ToTokens for Input {
                         quote!(
                             #field: #tt,
                         )
+                    }
+                    TypeOrGeneric::GenericWithNested { field, path } => {
+                        let new_ty = quote!(#path).to_string().replace(" ", "").replace(
+                            &format!("<{}>", generic.to_string()),
+                            &quote!(<#tt>).to_string(),
+                        );
+                        let as_path = syn::Path::from_string(&new_ty).unwrap();
+                        quote! {
+                            #field: #as_path,
+                        }
                     }
                     TypeOrGeneric::Type(tt) => tt.clone(),
                 })
@@ -178,7 +205,7 @@ impl ToTokens for Input {
                 .attrs(t.attrs())
                 .iter()
                 .map(|it| {
-                    let it: Meta = syn::parse_str(&it).unwrap();
+                    let it: Meta = syn::parse_str(&it).expect("meta to parse");
                     quote::quote!(#[#it])
                 })
                 .collect();
@@ -220,6 +247,6 @@ impl ToTokens for Input {
 
 #[proc_macro_derive(SealedGeneric, attributes(define))]
 pub fn def_gen(input: TokenStream) -> TokenStream {
-    let parsed = Input::from_derive_input(&parse_macro_input!(input)).unwrap();
+    let parsed = Input::from_derive_input(&parse_macro_input!(input)).expect("parse");
     quote::quote!(#parsed).into()
 }
