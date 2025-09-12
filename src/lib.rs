@@ -1,14 +1,11 @@
-use std::collections::HashMap;
 
 use convert_case::{Case, Casing};
-use darling::{ast::GenericParam, *};
+use darling::*;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{
     Ident, Meta,
-    parse::{self, Parse},
     parse_macro_input,
-    token::Token,
 };
 
 #[derive(Debug, FromField)]

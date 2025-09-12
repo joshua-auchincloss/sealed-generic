@@ -1,4 +1,4 @@
-use defined_generic::DefinedGeneric;
+use sealed_generic::DefinedGeneric;
 
 #[derive(DefinedGeneric)]
 #[define(
