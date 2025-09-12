@@ -1,12 +1,8 @@
-
 use convert_case::{Case, Casing};
 use darling::*;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{
-    Ident, Meta,
-    parse_macro_input,
-};
+use syn::{Ident, Meta, parse_macro_input};
 
 #[derive(Debug, FromField)]
 #[darling(attributes(define))]
@@ -68,6 +64,9 @@ struct Input {
 
     #[darling(default, multiple)]
     attr: Vec<String>,
+
+    #[darling(default)]
+    sealed: bool,
 }
 
 impl Input {
@@ -135,6 +134,16 @@ impl ToTokens for Input {
 
         let fields_eq: proc_macro2::TokenStream = fields_eq.into_iter().collect();
 
+        let seal_mod =
+            Ident::from_string(&("Sealed".to_string() + &ident.to_string()).to_case(Case::Pascal))
+                .unwrap();
+
+        if self.sealed {
+            tokens.extend(quote!(
+                pub(crate) trait #seal_mod {}
+            ));
+        }
+
         for t in &self.types {
             let tt = t.ident();
             let new_ident = Ident::from_string(
@@ -182,9 +191,23 @@ impl ToTokens for Input {
                 }
             });
 
+            if self.sealed {
+                tokens.extend(quote!(
+                    impl #seal_mod for #tt {}
+                ));
+            }
+
             tokens.extend(quote! {
                 impl From<#new_ident> for #ident<#tt> {
                     fn from(value: #new_ident) -> Self {
+                        Self {
+                            #fields_eq
+                        }
+                    }
+                }
+
+                impl From<#ident<#tt>> for #new_ident {
+                    fn from(value: #ident<#tt>) -> Self {
                         Self {
                             #fields_eq
                         }
@@ -195,7 +218,7 @@ impl ToTokens for Input {
     }
 }
 
-#[proc_macro_derive(DefinedGeneric, attributes(define))]
+#[proc_macro_derive(SealedGeneric, attributes(define))]
 pub fn def_gen(input: TokenStream) -> TokenStream {
     let parsed = Input::from_derive_input(&parse_macro_input!(input)).unwrap();
     quote::quote!(#parsed).into()
