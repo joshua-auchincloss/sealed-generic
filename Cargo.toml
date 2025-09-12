@@ -1,5 +1,6 @@
 [package]
 name = "sealed-generic"
+description = "Sealed generic type discriminants"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
