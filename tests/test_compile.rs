@@ -22,9 +22,11 @@ use sealed_generic::DefinedGeneric;
     )
 )]
 struct Basic<T> {
+    #[allow(dead_code)]
     ty: T,
 }
 
+#[cfg(test)]
 mod test {
     use super::*;
 
