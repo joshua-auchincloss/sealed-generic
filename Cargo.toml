@@ -16,5 +16,6 @@ quote = "1"
 syn = "2"
 
 [dev-dependencies]
+trybuild = "*"
 serde = { version = "*", features = ["derive"] }
 serde_json = { version = "*" }

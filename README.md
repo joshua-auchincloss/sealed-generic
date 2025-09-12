@@ -43,3 +43,34 @@ struct Basic<T> {
 ```
 
 
+## Sealing
+While turned off by default, you may seal the generic types of the struct to the types generated from the derive macro.
+
+Note: you must add `Sealed<name of struct>` as a type constraint.
+
+```rust
+use sealed_generic::SealedGeneric;
+
+
+#[derive(SealedGeneric)]
+#[define(
+    sealed,
+    types(ty = i32),
+)]
+pub struct SomeGeneric<T: SealedSomeGeneric> {
+    value: T
+}
+
+
+fn main() {
+    SomeGeneric<i32>{ ty: 0_i32 };
+    // OK
+    
+    SomeGeneric<String>{ ty: "".into() };
+    // Compiler Error >> `String` does not implement `SealedSomeGeneric`
+}
+```
+
+## Constraints
+
+- You may only use one generic field

@@ -1,0 +1,12 @@
+error[E0277]: the trait bound `String: SealedSomeGeneric` is not satisfied
+  --> tests/fail/seal.rs:13:36
+   |
+13 |     SomeGeneric::<String> { value: "".into() };
+   |                                    ^^^^^^^^^ the trait `SealedSomeGeneric` is not implemented for `String`
+   |
+   = help: the trait `SealedSomeGeneric` is implemented for `i32`
+note: required by a bound in `SomeGeneric`
+  --> tests/fail/seal.rs:8:27
+   |
+8  | pub struct SomeGeneric<T: SealedSomeGeneric> {
+   |                           ^^^^^^^^^^^^^^^^^ required by this bound in `SomeGeneric`
