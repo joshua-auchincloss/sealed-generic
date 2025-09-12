@@ -9,8 +9,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Check
+  test:
+    name: Test
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
