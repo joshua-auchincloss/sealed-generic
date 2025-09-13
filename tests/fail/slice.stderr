@@ -1,0 +1,13 @@
+error: proc-macro derive panicked
+ --> tests/fail/slice.rs:3:10
+  |
+3 | #[derive(SealedGeneric)]
+  |          ^^^^^^^^^^^^^
+  |
+  = help: message: unknown type
+
+error[E0405]: cannot find trait `SealedSomeGeneric` in this scope
+ --> tests/fail/slice.rs:8:24
+  |
+8 | pub struct NoSlices<T: SealedSomeGeneric> {
+  |                        ^^^^^^^^^^^^^^^^^ not found in this scope
