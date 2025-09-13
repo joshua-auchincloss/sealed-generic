@@ -1,5 +1,10 @@
 use sealed_generic::SealedGeneric;
 
+//
+//
+//
+//
+//
 #[derive(SealedGeneric)]
 #[define(
     sealed,
@@ -10,5 +15,7 @@ pub struct SomeGeneric<T: SealedSomeGeneric> {
 }
 
 fn main() {
-    SomeGeneric::<String> { value: "".into() };
+    SomeGeneric::<String> {
+        value: "test".into(),
+    };
 }

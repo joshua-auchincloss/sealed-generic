@@ -1,7 +1,7 @@
 [package]
 name = "sealed-generic"
 description = "Sealed generic type discriminants"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 license = "MIT"
 authors = ["Joshua Auchincloss <joshua.auchincloss@proton.me>"]

@@ -74,3 +74,4 @@ fn main() {
 ## Constraints
 
 - You may only use one generic field
+- You may not combine generic fields with slice literals (e.g. `[T; 2]` doesnt work yet)
